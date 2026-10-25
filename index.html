@@ -65,6 +65,17 @@ button,input,textarea{font:inherit;color:inherit}
 .push-aviso b{color:var(--accent);font-family:var(--head);font-size:17px}
 .push-aviso .btn{flex:none}
 /* Avisos */
+.reloj{display:flex;align-items:center;gap:6px}
+.reloj select{width:auto;flex:1;min-width:64px;padding:11px 8px;font-variant-numeric:tabular-nums;appearance:auto}
+.reloj .dos{font-weight:700}
+.ampm{display:flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;flex:none}
+.ampm button{border:0;background:var(--paper);color:var(--ink);padding:11px 10px;font-weight:700;cursor:pointer;font-size:15px}
+.ampm button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+#dlgNota .fila{flex-wrap:wrap}
+#dlgNota .fila>*{min-width:0;flex:1 1 190px}
+#dlgNota .fila>.reloj,#dlgNota .fila>.campo:has(> .reloj){flex:1 1 290px}
+.reloj select{min-width:58px}
+.fila-aviso{gap:10px}
 .error-campo{margin:0;color:var(--urgent);font-weight:700;font-size:15px}
 .toast{z-index:1000}
 .toggle.aviso.on{border-color:var(--accent);background:var(--accent-bg)}
@@ -228,6 +239,13 @@ dialog::backdrop{background:rgba(10,14,22,.55)}
 .recordar input{width:20px;height:20px;accent-color:var(--accent)}
 .error{color:var(--urgent);font-weight:700;font-size:15px;margin:0;min-height:1.4em}
 .login-form .btn.prim{justify-content:center;padding:14px;font-size:17px}
+.login-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.etiqueta{background:#45A01A;color:#fff;font-family:var(--head);font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:5px 11px;border-radius:999px}
+.login-saludo{color:var(--muted);font-size:15px;font-weight:700}
+.login-form h1#tLogin{font-size:clamp(28px,8vw,36px);line-height:1.05;letter-spacing:-.02em;margin:4px 0 2px}
+.login-form h1#tLogin span{color:var(--accent);position:relative;white-space:nowrap}
+.login-form h1#tLogin span::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:6px;background:#45A01A;opacity:.35;border-radius:3px;z-index:-1}
+.login-form h1#tLogin{position:relative;z-index:0}
 #login .credito{color:rgba(255,255,255,.85)}
 #login .credito b{color:#fff}
 .login-form{box-shadow:0 20px 50px rgba(0,0,0,.25)!important}
@@ -241,8 +259,9 @@ dialog::backdrop{background:rgba(10,14,22,.55)}
   <div class="login-caja">
     <div class="login-logo"><img id="loginLogo" alt="Honor Servicios de Seguridad"></div>
     <div class="login-form">
-      <h1 id="tLogin">Ingresa a tu gestión</h1>
-      <p>Usa tu usuario y contraseña de Honor.</p>
+      <div class="login-top"><span class="etiqueta">Agenda virtual</span><span class="login-saludo" id="lSaludo">Bienvenido</span></div>
+      <h1 id="tLogin">Reporta. Registra. <span>Cumple.</span></h1>
+      <p>Ingresa a tu agenda virtual de gestión administrativa.</p>
       <label class="campo"><span>Usuario</span><input class="input" id="lUsuario" inputmode="numeric" autocomplete="username" placeholder="Número de cédula"></label>
       <label class="campo"><span>Contraseña</span><span class="pass"><input class="input" id="lClave" type="password" autocomplete="current-password"><button type="button" id="lVer">Mostrar</button></span></label>
       <label class="recordar"><input type="checkbox" id="lRecordar" checked>Recordarme en este dispositivo</label>
@@ -311,11 +330,11 @@ dialog::backdrop{background:rgba(10,14,22,.55)}
 <dialog id="dlgNota" aria-labelledby="tNota">
   <div class="dlg">
     <h2 id="tNota">Nueva nota</h2>
-    <label class="campo"><span>Título</span><input class="input" id="fTitulo" placeholder="Ej.: Revisión de bodega"></label>
+    <label class="campo"><span>Título</span><input class="input" id="fTitulo" placeholder="Ej.: Reunión con proveedores"></label>
     <label class="campo"><span>Apuntes</span><textarea class="area" id="fTexto" placeholder="Escribe aquí todo lo que quieras anotar"></textarea></label>
     <div class="fila">
       <label class="campo"><span>Fecha</span><input class="input" type="date" id="fFecha"></label>
-      <label class="campo"><span>Hora</span><input class="input" type="time" id="fHora"></label>
+      <div class="campo"><span>Hora</span><div class="reloj" id="relojNota"></div><input type="hidden" id="fHora"></div>
     </div>
     <label class="toggle" id="tgUrg">
       <input type="checkbox" id="fUrgente">
@@ -325,7 +344,7 @@ dialog::backdrop{background:rgba(10,14,22,.55)}
       <input type="checkbox" id="fAviso">
       <span><b>Avisarme</b><small>Suena una alerta a la hora que elijas</small></span>
     </label>
-    <div class="campo oculto" id="campoAviso"><label class="campo"><span>Fecha y hora del aviso</span><input class="input" type="datetime-local" id="fAvisoHora"></label><p class="error-campo oculto" id="avisoError" role="alert"></p><button class="link" id="btnProbar" type="button" style="justify-self:start">Probar alerta ahora</button><p class="nota-ayuda" id="permTxt"></p></div>
+    <div class="campo oculto" id="campoAviso"><div class="campo"><span>Fecha y hora del aviso</span><div class="fila fila-aviso"><input class="input" type="date" id="fAvisoFecha" aria-label="Fecha del aviso"><div class="reloj" id="relojAviso"></div></div><input type="hidden" id="fAvisoHora"></div><p class="error-campo oculto" id="avisoError" role="alert"></p><button class="link" id="btnProbar" type="button" style="justify-self:start">Probar alerta ahora</button><p class="nota-ayuda" id="permTxt"></p></div>
     <div class="campo">
       <span>Fotos</span>
       <div class="miniaturas" id="fMinis"></div>
@@ -689,14 +708,46 @@ $("#fMinis").addEventListener("click", e => {
 function setUrgente(v){
   $("#fUrgente").checked = v; $("#tgUrg").classList.toggle("on", v);
 }
+/* Selector de hora con a. m. / p. m. (funciona igual en celular y computador) */
+function montarReloj(el, alCambiar){
+  const hs = Array.from({length: 12}, (_, i) => i + 1).map(h => `<option value="${h}">${h}</option>`).join("");
+  const ms = Array.from({length: 60}, (_, i) => pad(i)).map(m => `<option value="${m}">${m}</option>`).join("");
+  el.innerHTML = `<select class="input h" aria-label="Hora">${hs}</select><span class="dos">:</span><select class="input m" aria-label="Minutos">${ms}</select>
+    <div class="ampm" role="group" aria-label="a. m. o p. m."><button type="button" data-v="am" aria-pressed="false">a. m.</button><button type="button" data-v="pm" aria-pressed="true">p. m.</button></div>`;
+  const h = el.querySelector(".h"), m = el.querySelector(".m");
+  const marcar = v => el.querySelectorAll(".ampm button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === v)));
+  const ampm = () => el.querySelector('.ampm button[aria-pressed="true"]').dataset.v;
+  el.querySelectorAll(".ampm button").forEach(b => b.addEventListener("click", () => { marcar(b.dataset.v); alCambiar && alCambiar(); }));
+  h.addEventListener("change", () => alCambiar && alCambiar()); m.addEventListener("change", () => alCambiar && alCambiar());
+  return {
+    obtener(){ let hh = +h.value % 12; if (ampm() === "pm") hh += 12; return pad(hh) + ":" + m.value; },
+    poner(v){ if (!v) return; const [hh, mm] = v.split(":").map(Number); h.value = String(hh % 12 || 12); m.value = pad(mm); marcar(hh >= 12 ? "pm" : "am"); },
+    enfocar(){ h.focus(); }
+  };
+}
+const relojNota = montarReloj($("#relojNota"), () => { $("#fHora").value = relojNota.obtener(); });
+const relojAviso = montarReloj($("#relojAviso"), () => sincronizarAviso());
+function sincronizarAviso(){
+  const f = $("#fAvisoFecha").value;
+  $("#fAvisoHora").value = f ? f + "T" + relojAviso.obtener() : "";
+  $("#avisoError").classList.add("oculto");
+  return $("#fAvisoHora").value;
+}
+function ponerAviso(v){
+  $("#fAvisoHora").value = v || "";
+  if (!v) { $("#fAvisoFecha").value = ""; return; }
+  const [f, t] = v.split("T"); $("#fAvisoFecha").value = f; relojAviso.poner(t);
+}
+function ponerHoraNota(v){ $("#fHora").value = v || ""; if (v) relojNota.poner(v); }
+$("#fAvisoFecha").addEventListener("change", sincronizarAviso);
+$("#fAvisoFecha").addEventListener("input", sincronizarAviso);
 function mostrarErrorAviso(m){
   const el = $("#avisoError"); el.textContent = m; el.classList.remove("oculto");
-  el.scrollIntoView({block: "center", behavior: "smooth"}); $("#fAvisoHora").focus();
+  el.scrollIntoView({block: "center", behavior: "smooth"}); relojAviso.enfocar();
 }
-$("#fAvisoHora").addEventListener("input", () => $("#avisoError").classList.add("oculto"));
 function setAviso(v){
   $("#fAviso").checked = v; $("#tgAviso").classList.toggle("on", v); $("#campoAviso").classList.toggle("oculto", !v);
-  if (v && !$("#fAvisoHora").value) { const d = new Date(Date.now() + 30 * 60000); $("#fAvisoHora").value = isoLocal(d); }
+  if (v && !$("#fAvisoHora").value) { const d = new Date(Date.now() + 30 * 60000); ponerAviso(isoLocal(d)); }
 }
 $("#fAviso").addEventListener("change", e => {
   setAviso(e.target.checked);
@@ -711,9 +762,9 @@ function abrirEditor(n){
   $("#fTitulo").value = n ? n.titulo || "" : "";
   $("#fTexto").value = n ? n.texto || "" : "";
   $("#fFecha").value = n ? n.fecha : hoyISO();
-  $("#fHora").value = n ? n.hora || "" : pad(ahora.getHours()) + ":" + pad(ahora.getMinutes());
+  ponerHoraNota(n ? n.hora || "" : pad(ahora.getHours()) + ":" + pad(ahora.getMinutes()));
   setUrgente(!!(n && n.urgente));
-  $("#fAvisoHora").value = (n && n.aviso) || ""; edit.aviso = (n && n.aviso) || ""; edit.avisado = !!(n && n.avisado);
+  ponerAviso((n && n.aviso) || ""); edit.aviso = (n && n.aviso) || ""; edit.avisado = !!(n && n.avisado);
   setAviso(!!(n && n.aviso));
   textoPermiso();
   pintarMinis();
@@ -749,7 +800,7 @@ $("#btnGuardar").addEventListener("click", async () => {
   if (!titulo && !texto && !edit.existentes.length && !edit.nuevas.length) { toast("Escribe algo o agrega una foto"); return; }
   const fecha = $("#fFecha").value || hoyISO();
   const urgente = $("#fUrgente").checked; const para = "";
-  const aviso = $("#fAviso").checked ? $("#fAvisoHora").value : "";
+  const aviso = $("#fAviso").checked ? sincronizarAviso() : "";
   const avisoNuevo = aviso && aviso !== edit.aviso;
   $("#avisoError").classList.add("oculto");
   if ($("#fAviso").checked && !aviso) { mostrarErrorAviso("Elige la fecha y la hora completas del aviso."); return; }
@@ -759,7 +810,7 @@ $("#btnGuardar").addEventListener("click", async () => {
   try {
     const subidas = [];
     for (const f of edit.nuevas) subidas.push(await store.subirFoto(await comprimir(f.blob)));
-    const nota = {id: edit.id || nuevoId(), titulo, texto, fecha, hora: $("#fHora").value || "", urgente, para: urgente ? para : "", aviso, avisado,
+    const nota = {id: edit.id || nuevoId(), titulo, texto, fecha, hora: relojNota.obtener(), urgente, para: urgente ? para : "", aviso, avisado,
       fotos: [...edit.existentes, ...subidas], creado: edit.creado || Date.now(), actualizado: Date.now()};
     await store.guardar(nota);
     for (const f of edit.quitadas) await store.borrarFoto(f);
@@ -1017,7 +1068,7 @@ async function generarPDF(arr, d, h, btn, unaNota){
     doc.text(unaNota ? "Reporte de novedad" : "Reporte de gestión", W - M, y + 5, {align: "right"});
     doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(90, 100, 115);
     const lineas = [periodo + (!unaNota && filtro.urg ? " · solo urgentes" : "")];
-    if (nombreTrab || sesionUsuario) lineas.push("Trabajador: " + [nombreTrab, sesionUsuario].filter(Boolean).join(" · "));
+    if (nombreTrab || sesionUsuario) lineas.push("Registrado por: " + [nombreTrab, sesionUsuario].filter(Boolean).join(" · "));
     lineas.push("Generado el " + new Date().toLocaleString("es-CO", {dateStyle: "long", timeStyle: "short"}));
     lineas.forEach((t, i) => doc.text(t, W - M, y + 11 + i * 5, {align: "right"}));
     y += 30;
@@ -1095,6 +1146,7 @@ async function entrar(){
   mostrarApp(u);
 }
 $("#loginLogo").src = $(".marca img").src;
+{ const hh = new Date().getHours(); $("#lSaludo").textContent = hh < 12 ? "☀️ Buenos días" : hh < 19 ? "🌤️ Buenas tardes" : "🌙 Buenas noches"; }
 $("#lEntrar").addEventListener("click", entrar);
 ["#lUsuario", "#lClave"].forEach(s => $(s).addEventListener("keydown", e => { if (e.key === "Enter") entrar(); }));
 $("#lVer").addEventListener("click", () => { const i = $("#lClave"); const ver = i.type === "password"; i.type = ver ? "text" : "password"; $("#lVer").textContent = ver ? "Ocultar" : "Mostrar"; });
