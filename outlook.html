@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda Honor · Outlook</title>
+<!-- Complemento de Outlook · desarrollado por JF26 -->
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<style>
+:root{
+  --bg:#F2F5F4; --paper:#FFFFFF; --ink:#1C2740; --muted:#5B687C; --line:#CBD5D1;
+  --accent:#0441A6; --accent-bg:#E4ECFA; --green:#45A01A; --urgent:#C4302B; --urgent-bg:#FBE7E5;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#11161F; --paper:#1A2130; --ink:#E6EAF2; --muted:#9AA6B8; --line:#2C3547;
+    --accent:#7D9BFF; --accent-bg:#1E2A4A; --urgent:#FF7A70; --urgent-bg:#3A1F22; color-scheme:dark; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI", system-ui, -apple-system, sans-serif}
+.cab{background:linear-gradient(155deg,#0A56D6,#0441A6 55%,#022A6E);color:#fff;padding:14px 16px 16px;position:relative;overflow:hidden}
+.cab::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:rgba(69,160,26,.5)}
+.cab b{display:block;font-size:18px;position:relative}
+.cab span{font-size:13px;opacity:.85;position:relative}
+main{padding:14px 16px 24px;display:grid;gap:12px}
+.campo{display:grid;gap:4px}
+.campo>span{font-size:13px;color:var(--muted);font-weight:600}
+.input{width:100%;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:9px 10px;font:inherit}
+textarea.input{min-height:150px;resize:vertical}
+.input:focus,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn{border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer}
+.btn.prim{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.verde{background:var(--green);border-color:var(--green);color:#fff}
+.btn:disabled{opacity:.6;cursor:default}
+.toggle{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;background:var(--paper)}
+.toggle input{width:18px;height:18px;margin-top:2px}
+.toggle b{display:block}
+.toggle small{color:var(--muted)}
+.toggle.urg.on{border-color:var(--urgent);background:var(--urgent-bg)}
+.toggle.av.on{border-color:var(--accent);background:var(--accent-bg)}
+.fila{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fila>*{flex:1 1 140px}
+.reloj{display:flex;align-items:center;gap:5px;flex:1 1 220px}
+.reloj select{flex:1;min-width:52px}
+.ampm{display:flex;border:1.5px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+.ampm button{border:0;background:var(--paper);color:var(--ink);padding:9px 8px;font:inherit;font-weight:700;cursor:pointer}
+.ampm button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.error{color:var(--urgent);font-weight:600;margin:0}
+.ayuda{color:var(--muted);font-size:13px;margin:0}
+.oculto{display:none!important}
+.ok{text-align:center;padding:24px 8px;display:grid;gap:10px;justify-items:center}
+.ok .chulo{width:64px;height:64px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:grid;place-items:center;font-size:32px}
+.pie{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.credito{text-align:center;color:var(--muted);font-size:12px;margin-top:6px}
+.credito b{color:var(--accent)}
+</style>
+</head>
+<body>
+<header class="cab"><b>Agenda Honor</b><span id="cabTexto">Guarda este correo en tu agenda</span></header>
+
+<!-- Inicio de sesión -->
+<main id="vLogin" class="oculto">
+  <p class="ayuda">Ingresa una sola vez con tu usuario de la agenda. Después ya no te lo vuelve a pedir.</p>
+  <label class="campo"><span>Usuario (cédula)</span><input class="input" id="lUsuario" inputmode="numeric" autocomplete="username"></label>
+  <label class="campo"><span>Contraseña</span><input class="input" id="lClave" type="password" autocomplete="current-password"></label>
+  <p class="error" id="lError" role="alert"></p>
+  <button class="btn prim" id="lEntrar" type="button">Ingresar</button>
+</main>
+
+<!-- Formulario -->
+<main id="vForm" class="oculto">
+  <label class="campo"><span>Título</span><input class="input" id="fTitulo"></label>
+  <label class="campo"><span>Apuntes</span><textarea class="input" id="fTexto"></textarea></label>
+  <label class="toggle urg" id="tgUrg"><input type="checkbox" id="fUrgente"><span><b>Es urgente</b><small>Se marca en rojo en tu agenda</small></span></label>
+  <label class="toggle av" id="tgAv"><input type="checkbox" id="fAviso"><span><b>Avisarme</b><small>Te llega una notificación a esa hora</small></span></label>
+  <div class="campo oculto" id="campoAviso">
+    <span>Fecha y hora del aviso</span>
+    <div class="fila"><input class="input" type="date" id="fAvisoFecha" aria-label="Fecha del aviso"><div class="reloj" id="reloj"></div></div>
+  </div>
+  <p class="error oculto" id="fError" role="alert"></p>
+  <div class="pie">
+    <button class="btn" id="btnSalir" type="button">Cerrar sesión</button>
+    <button class="btn verde" id="btnGuardar" type="button">Guardar en mi agenda</button>
+  </div>
+</main>
+
+<!-- Guardado -->
+<main id="vOk" class="oculto">
+  <div class="ok">
+    <div class="chulo">✓</div>
+    <b id="okTitulo">Guardado en tu agenda</b>
+    <p class="ayuda" id="okTexto"></p>
+    <a class="btn prim" href="https://agendahonor.netlify.app/" target="_blank" rel="noopener" id="btnAbrir">Abrir mi agenda</a>
+    <button class="btn" id="btnOtra" type="button">Guardar otra vez este correo</button>
+  </div>
+</main>
+<p class="credito">Desarrollado por <b>JF26</b></p>
+
+<script>
+(() => {
+"use strict";
+const API = "https://agendahonor.netlify.app";
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, "0");
+const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const CLAVE = "honor-token-outlook";
+let token = "";
+try { token = localStorage.getItem(CLAVE) || ""; } catch(e) {}
+
+function vista(v){ ["#vLogin", "#vForm", "#vOk"].forEach(x => $(x).classList.toggle("oculto", x !== v)); }
+async function api(ruta, opt){
+  opt = opt || {};
+  const r = await fetch(API + ruta, Object.assign({}, opt, {headers: Object.assign({"content-type": "application/json"}, token ? {authorization: "Bearer " + token} : {}, opt.headers || {})}));
+  if (r.status === 401) { salir(); throw new Error("Tu sesión venció. Ingresa de nuevo."); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "Error del servidor");
+  return d;
+}
+function salir(){ token = ""; try { localStorage.removeItem(CLAVE); } catch(e) {} vista("#vLogin"); }
+
+/* ---- Selector de hora con a. m. / p. m. ---- */
+const reloj = $("#reloj");
+reloj.innerHTML = `<select class="input h" aria-label="Hora">${Array.from({length: 12}, (_, i) => `<option>${i + 1}</option>`).join("")}</select><b>:</b>
+  <select class="input m" aria-label="Minutos">${Array.from({length: 60}, (_, i) => `<option>${pad(i)}</option>`).join("")}</select>
+  <div class="ampm"><button type="button" data-v="am" aria-pressed="true">a. m.</button><button type="button" data-v="pm" aria-pressed="false">p. m.</button></div>`;
+const marcar = v => reloj.querySelectorAll(".ampm button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === v)));
+reloj.querySelectorAll(".ampm button").forEach(b => b.addEventListener("click", () => marcar(b.dataset.v)));
+function ponerHora(d){ const h = d.getHours(); reloj.querySelector(".h").value = String(h % 12 || 12); reloj.querySelector(".m").value = pad(d.getMinutes()); marcar(h >= 12 ? "pm" : "am"); }
+function leerHora(){ let h = +reloj.querySelector(".h").value % 12; if (reloj.querySelector('.ampm [aria-pressed="true"]').dataset.v === "pm") h += 12; return pad(h) + ":" + reloj.querySelector(".m").value; }
+
+$("#fUrgente").addEventListener("change", e => $("#tgUrg").classList.toggle("on", e.target.checked));
+$("#fAviso").addEventListener("change", e => {
+  $("#tgAv").classList.toggle("on", e.target.checked); $("#campoAviso").classList.toggle("oculto", !e.target.checked);
+  if (e.target.checked && !$("#fAvisoFecha").value) {
+    const d = new Date(Date.now() + 60 * 60000); d.setMinutes(Math.ceil(d.getMinutes() / 5) * 5, 0, 0);
+    $("#fAvisoFecha").value = isoDate(d); ponerHora(d);
+  }
+});
+
+/* ---- Leer el correo abierto ---- */
+function cargarCorreo(){
+  $("#fError").classList.add("oculto");
+  $("#fUrgente").checked = false; $("#tgUrg").classList.remove("on");
+  $("#fAviso").checked = false; $("#tgAv").classList.remove("on"); $("#campoAviso").classList.add("oculto"); $("#fAvisoFecha").value = "";
+  const item = Office.context.mailbox && Office.context.mailbox.item;
+  if (!item) { $("#fTitulo").value = ""; $("#fTexto").value = ""; $("#cabTexto").textContent = "Abre un correo para guardarlo"; return; }
+  $("#cabTexto").textContent = "Guarda este correo en tu agenda";
+  $("#fTitulo").value = item.subject || "Correo sin asunto";
+  const de = item.from ? (item.from.displayName ? item.from.displayName + " <" + item.from.emailAddress + ">" : item.from.emailAddress) : "";
+  const fecha = item.dateTimeCreated ? new Date(item.dateTimeCreated).toLocaleString("es-CO", {dateStyle: "long", timeStyle: "short"}) : "";
+  const cabecera = "📧 Correo de Outlook\nDe: " + de + (fecha ? "\nRecibido: " + fecha : "") + "\n\n";
+  $("#fTexto").value = cabecera + "(cargando el texto del correo…)";
+  item.body.getAsync(Office.CoercionType.Text, r => {
+    let cuerpo = r.status === Office.AsyncResultStatus.Succeeded ? (r.value || "") : "";
+    cuerpo = cuerpo.replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim();
+    if (cuerpo.length > 4000) cuerpo = cuerpo.slice(0, 4000) + "\n…";
+    $("#fTexto").value = cabecera + cuerpo;
+  });
+}
+
+/* ---- Guardar ---- */
+$("#btnGuardar").addEventListener("click", async () => {
+  const err = $("#fError"); err.classList.add("oculto");
+  const ahora = new Date();
+  let aviso = "", avisoCuando = null;
+  if ($("#fAviso").checked) {
+    const f = $("#fAvisoFecha").value;
+    if (!f) { err.textContent = "Elige la fecha del aviso."; err.classList.remove("oculto"); return; }
+    aviso = f + "T" + leerHora();
+    const [y, mo, d] = f.split("-").map(Number); const [hh, mm] = leerHora().split(":").map(Number);
+    avisoCuando = new Date(y, mo - 1, d, hh, mm).getTime();
+    if (avisoCuando < Date.now() - 60000) { err.textContent = "Esa hora ya pasó. Elige una hora posterior."; err.classList.remove("oculto"); return; }
+  }
+  const nota = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    titulo: $("#fTitulo").value.trim() || "Correo de Outlook",
+    texto: $("#fTexto").value.trim(),
+    fecha: isoDate(ahora), hora: pad(ahora.getHours()) + ":" + pad(ahora.getMinutes()),
+    urgente: $("#fUrgente").checked, aviso, avisado: false, avisoCuando, fotos: [], creado: Date.now()
+  };
+  const btn = $("#btnGuardar"); btn.disabled = true; btn.textContent = "Guardando…";
+  try {
+    await api("/api/notas", {method: "POST", body: JSON.stringify({nota})});
+    $("#okTexto").textContent = aviso
+      ? "Te avisaremos el " + new Date(avisoCuando).toLocaleString("es-CO", {weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit"}).replace(/\.$/, "") + "."
+      : "Ya lo puedes ver en tu agenda, desde cualquier aparato.";
+    $("#okTitulo").textContent = nota.urgente ? "Guardado como urgente" : "Guardado en tu agenda";
+    vista("#vOk");
+  } catch(e) { err.textContent = e.message; err.classList.remove("oculto"); }
+  finally { btn.disabled = false; btn.textContent = "Guardar en mi agenda"; }
+});
+$("#btnOtra").addEventListener("click", () => { cargarCorreo(); vista("#vForm"); });
+$("#btnSalir").addEventListener("click", () => { fetch(API + "/api/login", {method: "DELETE", headers: {authorization: "Bearer " + token}}).catch(() => {}); salir(); });
+$("#btnAbrir").addEventListener("click", e => {
+  try { if (Office.context.ui && Office.context.ui.openBrowserWindow) { e.preventDefault(); Office.context.ui.openBrowserWindow(API + "/"); } } catch(x) {}
+});
+
+/* ---- Inicio de sesión ---- */
+async function entrar(){
+  const u = $("#lUsuario").value.trim(), c = $("#lClave").value;
+  if (!u || !c) { $("#lError").textContent = "Escribe tu usuario y tu contraseña."; return; }
+  const btn = $("#lEntrar"); btn.disabled = true; btn.textContent = "Ingresando…";
+  try {
+    const r = await fetch(API + "/api/login", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({usuario: u, clave: c})});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { $("#lError").textContent = d.error || "No se pudo ingresar."; return; }
+    token = d.token; try { localStorage.setItem(CLAVE, token); } catch(e) {}
+    $("#lError").textContent = ""; $("#lClave").value = "";
+    cargarCorreo(); vista("#vForm");
+  } catch(e) { $("#lError").textContent = "Sin conexión. Revisa tu internet."; }
+  finally { btn.disabled = false; btn.textContent = "Ingresar"; }
+}
+$("#lEntrar").addEventListener("click", entrar);
+["#lUsuario", "#lClave"].forEach(s => $(s).addEventListener("keydown", e => { if (e.key === "Enter") entrar(); }));
+
+Office.onReady(() => {
+  // Si el panel queda abierto y cambias de correo, se actualiza solo.
+  try { Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, () => { if (token) { cargarCorreo(); vista("#vForm"); } }); } catch(e) {}
+  if (!token) { vista("#vLogin"); return; }
+  fetch(API + "/api/login", {headers: {authorization: "Bearer " + token}})
+    .then(r => { if (r.ok) { cargarCorreo(); vista("#vForm"); } else salir(); })
+    .catch(() => { cargarCorreo(); vista("#vForm"); });
+});
+})();
+</script>
+</body>
+</html>

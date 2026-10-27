@@ -623,7 +623,10 @@ function crearServidor(){
     escuchar(f){ cb = f; cargar(); timer = setInterval(cargar, 60000); document.addEventListener("visibilitychange", vis); window.addEventListener("online", cargar); },
     detener(){ vivo = false; clearInterval(timer); document.removeEventListener("visibilitychange", vis); window.removeEventListener("online", cargar); },
     recargar: cargar,
-    async guardar(n){ await api("/api/notas", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({nota: n})}); },
+    async guardar(n){
+      const datos = Object.assign({}, n, {avisoCuando: n.aviso && !n.avisado ? avisoEpoch(n.aviso) : null});
+      await api("/api/notas", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({nota: datos})});
+    },
     async borrar(id){ await api("/api/notas?id=" + encodeURIComponent(id), {method: "DELETE"}); },
     async subirFoto(blob){
       const r = await api("/api/fotos", {method: "POST", headers: {"content-type": blob.type || "image/jpeg"}, body: blob});

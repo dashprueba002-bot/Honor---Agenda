@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Complemento de Outlook: Agenda Honor (desarrollado por JF26) -->
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
+           xsi:type="MailApp">
+  <Id>7a343cdd-2075-4028-ae96-23f999c0f9ad</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>JF26</ProviderName>
+  <DefaultLocale>es-ES</DefaultLocale>
+  <DisplayName DefaultValue="Agenda Honor"/>
+  <Description DefaultValue="Guarda un correo como nota en tu agenda de Honor, con aviso si lo necesitas."/>
+  <IconUrl DefaultValue="https://agendahonor.netlify.app/outlook-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://agendahonor.netlify.app/outlook-128.png"/>
+  <SupportUrl DefaultValue="https://agendahonor.netlify.app/"/>
+  <AppDomains>
+    <AppDomain>https://agendahonor.netlify.app</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+  <Requirements>
+    <Sets>
+      <Set Name="Mailbox" MinVersion="1.1"/>
+    </Sets>
+  </Requirements>
+  <FormSettings>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://agendahonor.netlify.app/outlook.html"/>
+        <RequestedHeight>450</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+  <Permissions>ReadItem</Permissions>
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+  </Rule>
+  <DisableEntityHighlighting>false</DisableEntityHighlighting>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Requirements>
+      <bt:Sets DefaultMinVersion="1.3">
+        <bt:Set Name="Mailbox"/>
+      </bt:Sets>
+    </Requirements>
+    <Hosts>
+      <Host xsi:type="MailHost">
+        <DesktopFormFactor>
+          <ExtensionPoint xsi:type="MessageReadCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="grupoAgendaHonor">
+                <Label resid="Grupo.Etiqueta"/>
+                <Control xsi:type="Button" id="botonEnviarAgenda">
+                  <Label resid="Boton.Etiqueta"/>
+                  <Supertip>
+                    <Title resid="Boton.Etiqueta"/>
+                    <Description resid="Boton.Descripcion"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icono.16"/>
+                    <bt:Image size="32" resid="Icono.32"/>
+                    <bt:Image size="80" resid="Icono.80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Panel.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icono.16" DefaultValue="https://agendahonor.netlify.app/outlook-16.png"/>
+        <bt:Image id="Icono.32" DefaultValue="https://agendahonor.netlify.app/outlook-32.png"/>
+        <bt:Image id="Icono.80" DefaultValue="https://agendahonor.netlify.app/outlook-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Panel.Url" DefaultValue="https://agendahonor.netlify.app/outlook.html"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="Grupo.Etiqueta" DefaultValue="Agenda Honor"/>
+        <bt:String id="Boton.Etiqueta" DefaultValue="Enviar a mi agenda"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="Boton.Descripcion" DefaultValue="Guarda este correo como nota en tu agenda de Honor y programa un aviso si lo necesitas."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
