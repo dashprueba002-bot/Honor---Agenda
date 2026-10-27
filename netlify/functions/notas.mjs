@@ -1,6 +1,12 @@
 // Notas de cada usuario, guardadas en línea
 import { tienda, json, sesion, noAutorizado, idValido } from "../lib/comun.mjs";
 const txt = (v, max) => String(v || "").slice(0, max);
+async function actualizarAviso(st, usuario, id, aviso) {
+  const clave = "avisos/" + usuario;
+  const lista = ((await st.get(clave, { type: "json" })) || []).filter(a => a.id !== id);
+  if (aviso) lista.push(aviso);
+  if (lista.length) await st.setJSON(clave, lista.slice(-200)); else await st.delete(clave);
+}
 export default async req => {
   const s = await sesion(req);
   if (!s) return noAutorizado();
@@ -31,6 +37,13 @@ export default async req => {
       actualizado: Date.now()
     };
     await st.setJSON(pre + nota.id, nota);
+    // Mantiene al día la lista de avisos del servidor (así funciona aunque la nota venga de Outlook)
+    const cuando = Number(n.avisoCuando);
+    if (!nota.aviso || nota.avisado || cuando > 0) {
+      await actualizarAviso(st, s.usuario, nota.id,
+        nota.aviso && !nota.avisado && cuando > Date.now() - 60000 && cuando < Date.now() + 400 * 864e5
+          ? { id: nota.id, cuando, titulo: nota.titulo.slice(0, 120), texto: nota.texto.slice(0, 200) } : null);
+    }
     return json({ ok: true, nota });
   }
 
@@ -42,6 +55,7 @@ export default async req => {
       for (const f of n.fotos || []) await st.delete(`fotos/${s.usuario}/${f.id}`);
       await st.delete(pre + id);
     }
+    await actualizarAviso(st, s.usuario, id, null);
     return json({ ok: true });
   }
   return json({ error: "Método no permitido" }, 405);
