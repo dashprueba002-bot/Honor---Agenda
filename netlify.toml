@@ -1,12 +1,19 @@
-# Honor · Mi gestión — desarrollado por JF26
 [build]
-  publish = "."
+  publish = "public"
   functions = "netlify/functions"
 
 [functions]
   node_bundler = "esbuild"
 
 [[headers]]
-  for = "/sw.js"
+  for = "/*"
   [headers.values]
-    Cache-Control = "no-cache"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+    Cache-Control = "no-store"

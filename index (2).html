@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Ingresar · HONOR Formularios QR</title>
+<link rel="icon" href="/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font:400 16px/1.5 "Outfit","Segoe UI",system-ui,sans-serif;color:#0F1B33;background:#fff}
+.wrap{min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.brandside{position:relative;overflow:hidden;background:#013FA4;color:#fff;padding:64px;display:flex;flex-direction:column;justify-content:space-between;gap:40px;padding-top:max(64px,env(safe-area-inset-top))}
+.brandside .dot{position:absolute;border-radius:50%;background:#3DA218}
+.brandside .d1{left:-90px;bottom:-90px;width:300px;height:300px}
+.brandside .d2{left:250px;bottom:120px;width:90px;height:90px}
+.brandside img{width:300px;max-width:80%;height:auto;display:block;position:relative}
+.pitch{position:relative;max-width:440px}
+.pitch h2{margin:0 0 14px;font-size:clamp(32px,3.6vw,46px);line-height:1.05;font-weight:800}
+.pitch p{margin:0;font-size:18px;color:#DCE6F7}
+.formside{display:flex;align-items:center;justify-content:center;padding:64px 24px;padding-bottom:max(64px,env(safe-area-inset-bottom))}
+form{width:100%;max-width:380px;display:flex;flex-direction:column;gap:18px}
+h1{margin:0;font-size:30px;font-weight:700}
+.sub{margin:-12px 0 4px;color:#4A5873;font-size:15px}
+label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:#4A5873}
+input{height:52px;border:1px solid #C9D3E3;border-radius:10px;padding:0 14px;font:500 16px "Outfit",sans-serif;color:#0F1B33;background:#F7F9FC}
+input:focus{outline:none;border-color:#013FA4;box-shadow:0 0 0 3px #EAF0FA}
+button{height:54px;border:0;border-radius:10px;background:#013FA4;color:#fff;font:700 16px "Outfit",sans-serif;cursor:pointer;margin-top:6px}
+button:hover{background:#012E78}
+button:focus-visible{outline:3px solid #3DA218;outline-offset:2px}
+button:disabled{opacity:.6;cursor:default}
+.err{color:#B3261E;font-weight:600;min-height:1.5em;margin:0}
+.bar{height:4px;width:64px;background:#3DA218;border-radius:2px}
+@media (max-width:820px){
+  .wrap{grid-template-columns:1fr}
+  .brandside{padding:28px 24px 34px;padding-top:max(28px,env(safe-area-inset-top))}
+  .brandside img{width:200px}
+  .pitch h2{font-size:28px}.pitch p{font-size:16px}
+  .brandside .d1{width:160px;height:160px;left:auto;right:-60px;bottom:-70px}
+  .brandside .d2{display:none}
+  .formside{padding:32px 20px 48px;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="brandside">
+    <span class="dot d1" aria-hidden="true"></span><span class="dot d2" aria-hidden="true"></span>
+    <img src="/assets/logo-honor-blanco.png" alt="HONOR Servicios de Seguridad">
+    <div class="pitch">
+      <h2>Formularios QR para tu operación</h2>
+      <p>Crea formularios, imprime su código y revisa los indicadores de cada puesto en tiempo real.</p>
+    </div>
+    <span aria-hidden="true"></span>
+  </section>
+  <main class="formside">
+    <form id="login" novalidate>
+      <h1>Ingresa al panel</h1>
+      <p class="sub">Usa tu número de documento</p>
+      <label>Usuario<input id="user" name="user" inputmode="numeric" autocomplete="username" required></label>
+      <label>Contraseña<input id="password" name="password" type="password" autocomplete="current-password" required></label>
+      <p class="err" id="err" role="alert"></p>
+      <button type="submit" id="go">Ingresar</button>
+      <span class="bar" aria-hidden="true"></span>
+    </form>
+  </main>
+</div>
+<script>
+fetch("/api/me").then(r => { if (r.ok) location.replace("/admin/"); }).catch(() => {});
+const form = document.getElementById("login"), err = document.getElementById("err"), go = document.getElementById("go");
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const user = form.user.value.trim(), password = form.password.value;
+  if (!user || !password){ err.textContent = "Escribe tu usuario y tu contraseña."; return; }
+  err.textContent = ""; go.disabled = true; go.textContent = "Ingresando…";
+  try {
+    const r = await fetch("/api/login", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ user, password }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || "No se pudo ingresar.");
+    location.replace("/admin/");
+  } catch (ex){
+    err.textContent = ex.message; go.disabled = false; go.textContent = "Ingresar";
+    form.password.value = ""; form.password.focus();
+  }
+});
+document.getElementById("user").focus();
+</script>
+</body>
+</html>

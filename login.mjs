@@ -1,26 +1,22 @@
-// Inicio y cierre de sesión
-import { tienda, json, limpiarId, verificarClave, asegurarAdmin, crearSesion, sesion, noAutorizado, esperar } from "../lib/comun.mjs";
-export default async req => {
-  const st = tienda();
-  if (req.method === "GET") {           // ¿la sesión sigue activa?
-    const s = await sesion(req);
-    return s ? json({ usuario: s.usuario, nombre: s.nombre, admin: s.admin }) : noAutorizado();
+import { json, checkCredentials, sessionCookie, limited } from "../lib/auth.mjs";
+
+export default async (req, context) => {
+  if (req.method !== "POST") return json(405, { error: "Método no permitido" });
+  const ip = context.ip || "anon";
+  if (limited("login:" + ip, 10, 15 * 60 * 1000))
+    return json(429, { error: "Demasiados intentos. Espera 15 minutos e inténtalo de nuevo." });
+  const body = await req.json().catch(() => ({}));
+  try {
+    if (!checkCredentials(body.user, body.password)) {
+      await new Promise((r) => setTimeout(r, 600));
+      return json(401, { error: "Usuario o contraseña incorrectos" });
+    }
+    const user = String(body.user).trim();
+    return json(200, { ok: true, user }, { "Set-Cookie": sessionCookie(user) });
+  } catch (e) {
+    console.error(e);
+    return json(500, { error: e.message });
   }
-  if (req.method === "DELETE") {        // cerrar sesión
-    const s = await sesion(req);
-    if (s) await st.delete("sesiones/" + s.token);
-    return json({ ok: true });
-  }
-  if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
-  await asegurarAdmin();
-  let d; try { d = await req.json(); } catch { return json({ error: "Datos inválidos" }, 400); }
-  const usuario = limpiarId(d.usuario);
-  const reg = usuario ? await st.get("usuarios/" + usuario, { type: "json" }) : null;
-  if (!reg || !verificarClave(d.clave || "", reg.clave)) {
-    await esperar(700);                 // frena los intentos repetidos
-    return json({ error: "Usuario o contraseña incorrectos." }, 401);
-  }
-  const token = await crearSesion(usuario);
-  return json({ token, usuario, nombre: reg.nombre || "", admin: !!reg.admin });
 };
+
 export const config = { path: "/api/login" };

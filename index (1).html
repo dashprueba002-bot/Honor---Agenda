@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Formulario · HONOR</title>
+<link rel="icon" href="/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles.css">
+<script src="/assets/form-render.js"></script>
+</head>
+<body>
+<main id="app"><div class="fill-head"><div class="inner"><img src="/assets/logo-honor-blanco.png" alt="HONOR Servicios de Seguridad"></div></div><div class="loading">Cargando formulario…</div></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const { renderForm, collect, markServerErrors, esc } = window.QRForms;
+const app = document.getElementById("app");
+const params = new URLSearchParams(location.search);
+const id = params.get("id"), k = params.get("k");
+let form = null;
+
+const HEAD = `<div class="fill-head"><div class="inner"><img src="/assets/logo-honor-blanco.png" alt="HONOR Servicios de Seguridad"></div></div>`;
+function message(title, text){
+  app.innerHTML = `${HEAD}<div class="fill has-head"><div class="empty"><h2>${esc(title)}</h2><p>${esc(text)}</p></div></div>`;
+}
+
+async function load(){
+  if (!id || !k) return message("Enlace incompleto", "Vuelve a escanear el código QR del formulario.");
+  try {
+    const r = await fetch(`/api/public/form?id=${encodeURIComponent(id)}&k=${encodeURIComponent(k)}`);
+    const data = await r.json().catch(() => ({}));
+    if (r.status === 410) return message("Formulario cerrado", "Este formulario ya no recibe respuestas.");
+    if (!r.ok) return message("Formulario no disponible", "Este código apunta a un formulario que no existe. Pide un código nuevo a quien lo compartió.");
+    form = data;
+    document.title = form.title;
+    showForm();
+  } catch {
+    message("Sin conexión", "Revisa tu conexión a internet y vuelve a escanear el código.");
+  }
+}
+
+function showForm(){ app.innerHTML = renderForm(form); window.scrollTo(0, 0); }
+
+function showThanks(){
+  app.innerHTML = `${HEAD}<div class="fill has-head sent"><div class="tick"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h1>Respuesta enviada</h1><p class="desc">Gracias. Tus respuestas a “${esc(form.title)}” quedaron registradas.</p>
+    <button class="btn" id="again">Enviar otra respuesta</button></div>`;
+  document.getElementById("again").onclick = showForm;
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener("submit", async (e) => {
+  const formEl = e.target.closest("form[data-qrform]"); if (!formEl) return;
+  e.preventDefault();
+  const { answers, errors, hp } = collect(formEl, form);
+  const errBox = formEl.querySelector(".formerr"); errBox.textContent = "";
+  if (errors.length){
+    errors[0].scrollIntoView({ behavior: "smooth", block: "center" });
+    const i = errors[0].querySelector("input,select,textarea"); if (i) i.focus({ preventScroll: true });
+    return;
+  }
+  const btn = formEl.querySelector('[type="submit"]'); btn.disabled = true; btn.textContent = "Enviando…";
+  try {
+    const r = await fetch("/api/public/submit", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, k, answers, hp })
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok){
+      const boxes = markServerErrors(formEl, data.fields);
+      if (boxes.length) boxes[0].scrollIntoView({ behavior: "smooth", block: "center" });
+      throw new Error(data.error || "No se pudo enviar la respuesta.");
+    }
+    showThanks();
+  } catch (err){
+    errBox.textContent = err.message || "No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.";
+    btn.disabled = false; btn.textContent = "Enviar respuesta";
+  }
+});
+
+load();
+</script>
+</body>
+</html>
